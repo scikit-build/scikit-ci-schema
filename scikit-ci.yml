@@ -1,92 +1,55 @@
 
-common:
 
-  install:
-    - python -m pip install --disable-pip-version-check --upgrade pip
-    - python -m pip install -r requirements.txt
-    - python -m pip install -r requirements-dev.txt
+pre_install:
 
-    - cmake: 3.6.2
+  appveyor:
+    cmd:
+      - python ci/appveyor/patch_vs2008.py
+      - python ci/appveyor/download_run_with_visual_studio.py
 
-  build:
-    - python setup.py build
+    environment:
+      - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
 
-  style:
-    - python setup.py build
+  travis:
+    osx:
+      cmd:
+        - brew update
+        - brew outdated pyenv || brew upgrade pyenv
+        - eval "$( penv init -)"
+        - pyenv install ${PYTHONVERSION}
+        - pyenv local ${PYTHONVERSION}
+        - echo "'Python version:'"
+        - python -c "import sys, struct; print(sys.version); print('{}-bit'.format(struct.calcsize('P') * 8))"
+      environment:
+        - RUN_ENV: eval("$( pyenv init - )")
 
-  test:
-    - python -m flake8 -v
-    - python setup.py test  # --addopts EXTRA_TEST_ARGS
+install:
 
-  after_test:
-    - python setup.py bdist_wheel
+  all:
+    - python ci/install_cmake.py 3.6.2
+    - RUN_ENV: python -m pip install --disable-pip-version-check --upgrade pip
+    - RUN_ENV: python -m pip install -r requirements.txt
+    - RUN_ENV: python -m pip install -r requirements-dev.txt
 
-appveyor:
+  circleci:
+    - sudo apt-get update
+    - sudo apt-get install fortran
 
-  # fixup: true
-  # Implement workaround for 64-bit Visual Studio 2008
-  #  - Downloading 64-bit Visual Studio Fix
-  #  - Unpacking 64-bit Visual Studio Fix
-  #  - Applying 64-bit Visual Studio Fix (C:\\vs2008_patch\\setup_x64.bat)
+pre_build:
+  - RUN_ENV: python -m flake8 -v
 
-  install:
-    pre:
-#      - Download run_with_env.cmd into ci/appveyor/run-with-visual-studio.cmd
-#      - set PYTHONSCRIPTS
-#        - prepend PYTHONSCRIPTS to PATH
-#        - set SKBUILD_CMAKE_CONFIG to Release
+build:
+  - RUN_ENV: python setup.py build
 
-  after_test:
+test:
+  - RUN_ENV: python setup.py test  # --addopts EXTRA_TEST_ARGS
 
-    post:
-      - python setup.py bdist_wininst
-      - python setup.py bdist_msi
-#      - "%PYTHONSCRIPTS%\\codecov.exe" -X cov --required --file .\\tests\\coverage.xml
-#      - python: if os.path.exists("dist"): self.check_call(["dir", "dist"], shell=True)
+after_test:
+  all:
+    - RUN_ENV: codecov -X gcov --required --file ./tests/coverage.xml
+    - RUN_ENV: python setup.py bdist_wheel
 
-
-circleci:
-
-  install:
-    pre:
-      - sudo apt-get update
-      - sudo apt-get install fortran
-
-    post:
-      - codecov -X gcov --required --file ./tests/coverage.xml
-
-travis:
-
-  install:
-
-    pre_osx:
-
-      - |
-        brew update
-        brew outdated pyenv || brew upgrade pyenv
-        eval "$( penv init -)"
-        pyenv install ${PYTHONVERSION}
-        pyenv local ${PYTHONVERSION}
-        echo "'Python version:'"
-        python -c "import sys, struct; print(sys.version); print('{}-bit'.format(struct.calcsize('P') * 8))"
-        pip install --user --disable-pip-version-check --user --upgrade pip
-        pip install --user -r requirements.txt
-        pip install --user -r requirements-dev.txt
-
-
-  build:
-    override:
-      osx:
-        - eval("$( pyenv init - )") python setup.py build
-
-  style:
-    override:
-      osx:
-        - eval("$( pyenv init - )") python -m flake8 -v
-
-
-  test:
-    override:
-      osx:
-        - eval("$( pyenv init - )") python setup.py test  # --addopts EXTRA_TEST_ARGS
+  appveyor:
+    - RUN_ENV: python setup.py bdist_wininst
+    - RUN_ENV: python setup.py bdist_msi
 
