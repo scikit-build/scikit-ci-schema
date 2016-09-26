@@ -1,0 +1,111 @@
+
+common:
+
+  install:
+    - python -m pip install --disable-pip-version-check --upgrade pip
+    - python -m pip install -r requirements.txt
+    - python -m pip install -r requirements-dev.txt
+
+  build:
+    - python setup.py build
+
+  style:
+    - python setup.py build
+
+  test:
+    - python -m flake8 -v
+    - python setup.py test  # --addopts EXTRA_TEST_ARGS
+
+  after_test:
+    - python setup.py bdist_wheel
+
+appveyor:
+
+  # fixup: true
+  # Implement workaround for 64-bit Visual Studio 2008
+  #  - Downloading 64-bit Visual Studio Fix
+  #  - Unpacking 64-bit Visual Studio Fix
+  #  - Applying 64-bit Visual Studio Fix (C:\\vs2008_patch\\setup_x64.bat)
+
+  install:
+    pre:
+#      - Download run_with_env.cmd into ci/appveyor/run-with-visual-studio.cmd
+#      - set PYTHONSCRIPTS
+#        - prepend PYTHONSCRIPTS to PATH
+#        - set SKBUILD_CMAKE_CONFIG to Release
+#        - Download + Install cmake
+#          - cmake-3.5.2-win32-x86.zip -> C:/cmake.zip -> C:/cmake
+#          - prepend C:/cmake/bin to PATH
+
+  after_test:
+
+    post:
+      - python setup.py bdist_wininst
+      - python setup.py bdist_msi
+#      - "%PYTHONSCRIPTS%\\codecov.exe" -X cov --required --file .\\tests\\coverage.xml
+#      - python: if os.path.exists("dist"): self.check_call(["dir", "dist"], shell=True)
+
+
+circleci:
+
+  install:
+    pre:
+      - sudo apt-get update
+      - sudo apt-get install fortran
+      - |
+        wget --no-check-certificate --progress=dot https://cmake.org/files/v3.5/cmake-3.5.0-Linux-x86_64.tar.gz
+        tar xvf cmake-3.5.0-Linux-x86_64.tar.gz
+        sudo rsync -azv cmake-3.5.0-Linux-x86_64/ /usr/local
+
+    post:
+      - codecov -X gcov --required --file ./tests/coverage.xml
+
+travis:
+
+  install:
+    pre:
+      - python -c "os.environ['CMAKE_OS'] = 'Darwin' if os.environ['TRAVIS_OS_NAME') == 'osx' else 'Linux'"
+
+      - wget --no-check-certificate --progress=dot https://cmake.org/files/v3.5/cmake-3.5.0-${CMAKE_OS}-x86_64.tar.gz
+      - tar xvf cmake-3.5.0-${CMAKE_OS}-x86_64.tar.gz
+
+    pre_linux:
+      - sudo rsync -avz cmake-3.5.0-${CMAKE_OS}-x86_64/ /usr/local
+
+    pre_osx:
+      # Removing any existing CMake
+      - for file in cmake cpack cmake-gui ccmake ctest; do sudo rm -f $file; done
+
+
+      # Installing CMake
+      - sudo cmake-3.5.0-${CMAKE_OS}-x86_64/CMake.app/Contents/bin/cmake-gui --install
+
+      - |
+        brew update
+        brew outdated pyenv || brew upgrade pyenv
+        eval "$( penv init -)"
+        pyenv install ${PYTHONVERSION}
+        pyenv local ${PYTHONVERSION}
+        echo "'Python version:'"
+        python -c "import sys, struct; print(sys.version); print('{}-bit'.format(struct.calcsize('P') * 8))"
+        pip install --user --disable-pip-version-check --user --upgrade pip
+        pip install --user -r requirements.txt
+        pip install --user -r requirements-dev.txt
+
+
+  build:
+    override:
+      osx:
+        - eval("$( pyenv init - )") python setup.py build
+
+  style:
+    override:
+      osx:
+        - eval("$( pyenv init - )") python -m flake8 -v
+
+
+  test:
+    override:
+      osx:
+        - eval("$( pyenv init - )") python setup.py test  # --addopts EXTRA_TEST_ARGS
+
