@@ -4,40 +4,27 @@ mapping:
     type: str
     required: true
     unique: yes
-  pre_install:
-    - &step
-      type: map
-      unique: yes
-      mapping:
-        any_ci:
-          - &ci
+  pre_install: &step
+    type: map
+    mapping:
+      any_ci: &ci
+        type: map
+        mapping:
+          any_os: &os
             type: map
-            unique: yes
             mapping:
-              - &os
-                any_os:
-                  type: map
-                  unique: yes
-                  mapping:
-                    pre:
-                      - &context
-                        type: map
-                        unique: yes
-                        mapping:
-                          cmd:
-                            type: seq
-                            sequence:
-                              - type: str
-                          environment:
-                            - {type: map, unique: yes}
-                    override: *context
-                    post: *context
-            linux: *os
-            osx: *os
-            windows: *os
-        appveyor: *ci
-        circle: *ci
-        travis: *ci
+              cmd:
+                type: seq
+                sequence:
+                  - type: str
+              environment:
+                type: any
+          linux: *os
+          osx: *os
+          windows: *os
+      appveyor: *ci
+      circle: *ci
+      travis: *ci
 
   install: *step
 
