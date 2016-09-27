@@ -1,10 +1,10 @@
-schema_version: "0.2.0"
+schema_version: "0.3.0"
 
 pre_install:
 
   appveyor:
     windows:
-      cmd:
+      commands:
         - python ci/appveyor/patch_vs2008.py
         - python ci/appveyor/install_visual_studio_wrapper.py
       environment:
@@ -12,7 +12,7 @@ pre_install:
 
   travis:
     osx:
-      cmd:
+      commands:
         - python ci/travis/install_pyenv.py
       environment:
         - RUN_ENV: ci/travis/run_with_pyenv.py"
@@ -21,7 +21,7 @@ install:
 
   any_ci:
     any_os:
-      cmd:
+      commands:
         - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
         - $<RUN_ENV> python -m pip install -r requirements.txt
         - $<RUN_ENV> python -m pip install -r requirements-dev.txt
@@ -29,37 +29,37 @@ install:
 
   circle:
     linux:
-      cmd:
+      commands:
         - sudo apt-get update
         - sudo apt-get install fortran
 
 pre_build:
   any_ci:
     any_os:
-      cmd:
+      commands:
         - $<RUN_ENV> python -m flake8 -v
 
 build:
   any_ci:
       any_os:
-        cmd:
+        commands:
           - $<RUN_ENV> python setup.py build
 
 test:
   any_ci:
     any_os:
-      cmd:
+      commands:
         - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
 
 after_test:
   any_ci:
     any_os:
-      cmd:
+      commands:
         - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
         - $<RUN_ENV> python setup.py bdist_wheel
 
   appveyor:
     windows:
-        cmd:
+      commands:
         - $<RUN_ENV> python setup.py bdist_wininst
         - $<RUN_ENV> python setup.py bdist_msi

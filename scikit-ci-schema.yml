@@ -1,19 +1,23 @@
 type: map
 mapping:
+
   schema_version:
     type: str
     required: true
     unique: yes
+
   pre_install: &step
     type: map
     mapping:
+
       any_ci: &ci
         type: map
         mapping:
+
           any_os: &os
             type: map
             mapping:
-              cmd:
+              commands:
                 type: seq
                 sequence:
                   - type: str
@@ -22,16 +26,13 @@ mapping:
           linux: *os
           osx: *os
           windows: *os
+
       appveyor: *ci
       circle: *ci
       travis: *ci
 
   install: *step
-
   pre_build: *step
-
   build: *step
-
   test: *step
-
   after_test: *step
