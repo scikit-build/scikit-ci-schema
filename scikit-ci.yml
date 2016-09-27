@@ -1,5 +1,3 @@
-
-
 pre_install:
 
   appveyor:
@@ -21,35 +19,34 @@ pre_install:
         - echo "'Python version:'"
         - python -c "import sys, struct; print(sys.version); print('{}-bit'.format(struct.calcsize('P') * 8))"
       environment:
-        - RUN_ENV: eval("$( pyenv init - )")
+        - RUN_ENV: ci/travis/run_with_pyenv.py"
 
 install:
 
   all:
+    - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
+    - $<RUN_ENV> python -m pip install -r requirements.txt
+    - $<RUN_ENV> python -m pip install -r requirements-dev.txt
     - python ci/install_cmake.py 3.6.2
-    - RUN_ENV: python -m pip install --disable-pip-version-check --upgrade pip
-    - RUN_ENV: python -m pip install -r requirements.txt
-    - RUN_ENV: python -m pip install -r requirements-dev.txt
 
   circleci:
     - sudo apt-get update
     - sudo apt-get install fortran
 
 pre_build:
-  - RUN_ENV: python -m flake8 -v
+  - $<RUN_ENV> python -m flake8 -v
 
 build:
-  - RUN_ENV: python setup.py build
+  - $<RUN_ENV> python setup.py build
 
 test:
-  - RUN_ENV: python setup.py test  # --addopts EXTRA_TEST_ARGS
+  - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
 
 after_test:
   all:
-    - RUN_ENV: codecov -X gcov --required --file ./tests/coverage.xml
-    - RUN_ENV: python setup.py bdist_wheel
+    - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
+    - $<RUN_ENV> python setup.py bdist_wheel
 
   appveyor:
-    - RUN_ENV: python setup.py bdist_wininst
-    - RUN_ENV: python setup.py bdist_msi
-
+    - $<RUN_ENV> python setup.py bdist_wininst
+    - $<RUN_ENV> python setup.py bdist_msi
