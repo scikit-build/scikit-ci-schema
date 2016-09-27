@@ -3,21 +3,14 @@ pre_install:
   appveyor:
     cmd:
       - python ci/appveyor/patch_vs2008.py
-      - python ci/appveyor/download_run_with_visual_studio.py
-
+      - python ci/appveyor/install_visual_studio_wrapper.py
     environment:
       - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
 
   travis:
     osx:
       cmd:
-        - brew update
-        - brew outdated pyenv || brew upgrade pyenv
-        - eval "$( penv init -)"
-        - pyenv install ${PYTHONVERSION}
-        - pyenv local ${PYTHONVERSION}
-        - echo "'Python version:'"
-        - python -c "import sys, struct; print(sys.version); print('{}-bit'.format(struct.calcsize('P') * 8))"
+        - python ci/travis/install_pyenv.py
       environment:
         - RUN_ENV: ci/travis/run_with_pyenv.py"
 
