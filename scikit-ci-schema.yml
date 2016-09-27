@@ -1,0 +1,50 @@
+type: map
+mapping:
+  schema_version:
+    type: str
+    required: true
+    unique: yes
+  pre_install:
+    - &step
+      type: map
+      unique: yes
+      mapping:
+        any_ci:
+          - &ci
+            type: map
+            unique: yes
+            mapping:
+              - &os
+                any_os:
+                  type: map
+                  unique: yes
+                  mapping:
+                    pre:
+                      - &context
+                        type: map
+                        unique: yes
+                        mapping:
+                          cmd:
+                            type: seq
+                            sequence:
+                              - type: str
+                          environment:
+                            - {type: map, unique: yes}
+                    override: *context
+                    post: *context
+            linux: *os
+            osx: *os
+            windows: *os
+        appveyor: *ci
+        circle: *ci
+        travis: *ci
+
+  install: *step
+
+  pre_build: *step
+
+  build: *step
+
+  test: *step
+
+  after_test: *step

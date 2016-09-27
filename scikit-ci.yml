@@ -1,11 +1,14 @@
+schema_version: "0.1.0"
+
 pre_install:
 
   appveyor:
-    cmd:
-      - python ci/appveyor/patch_vs2008.py
-      - python ci/appveyor/install_visual_studio_wrapper.py
-    environment:
-      - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
+    windows:
+      cmd:
+        - python ci/appveyor/patch_vs2008.py
+        - python ci/appveyor/install_visual_studio_wrapper.py
+      environment:
+        - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
 
   travis:
     osx:
@@ -16,30 +19,47 @@ pre_install:
 
 install:
 
-  all:
-    - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
-    - $<RUN_ENV> python -m pip install -r requirements.txt
-    - $<RUN_ENV> python -m pip install -r requirements-dev.txt
-    - python ci/install_cmake.py 3.6.2
+  any_ci:
+    any_os:
+      cmd:
+        - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
+        - $<RUN_ENV> python -m pip install -r requirements.txt
+        - $<RUN_ENV> python -m pip install -r requirements-dev.txt
+        - python ci/install_cmake.py 3.6.2
 
-  circleci:
-    - sudo apt-get update
-    - sudo apt-get install fortran
+  circle:
+    linux:
+      cmd:
+        - sudo apt-get update
+        - sudo apt-get install fortran
 
 pre_build:
-  - $<RUN_ENV> python -m flake8 -v
+  any_ci:
+    any_os:
+      cmd:
+        - $<RUN_ENV> python -m flake8 -v
 
 build:
-  - $<RUN_ENV> python setup.py build
+  any_ci:
+      any_os:
+        cmd:
+          - $<RUN_ENV> python setup.py build
 
 test:
-  - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
+  any_ci:
+    any_os:
+      cmd:
+        - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
 
 after_test:
-  all:
-    - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
-    - $<RUN_ENV> python setup.py bdist_wheel
+  any_ci:
+    any_os:
+      cmd:
+        - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
+        - $<RUN_ENV> python setup.py bdist_wheel
 
   appveyor:
-    - $<RUN_ENV> python setup.py bdist_wininst
-    - $<RUN_ENV> python setup.py bdist_msi
+    windows:
+        cmd:
+        - $<RUN_ENV> python setup.py bdist_wininst
+        - $<RUN_ENV> python setup.py bdist_msi
