@@ -10,26 +10,27 @@ mapping:
     type: map
     mapping:
 
-      any_ci: &ci
+      # commands and environment define a context
+      commands: &commands
+        type: seq
+        sequence:
+          - type: str
+      environment: &environment
+        type: any
+
+      appveyor: &context
         type: map
         mapping:
+          commands: *commands
+          environment: *environment
 
-          any_os: &os
-            type: map
-            mapping:
-              commands:
-                type: seq
-                sequence:
-                  - type: str
-              environment:
-                type: any
-          linux: *os
-          osx: *os
-          windows: *os
+      circle: *context
 
-      appveyor: *ci
-      circle: *ci
-      travis: *ci
+      travis:
+        type: map
+        mapping:
+          linux: *context
+          osx: *context
 
   install: *step
   pre_build: *step

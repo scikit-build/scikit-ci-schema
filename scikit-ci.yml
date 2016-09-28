@@ -1,14 +1,13 @@
-schema_version: "0.3.0"
+schema_version: "0.4.0"
 
 pre_install:
 
   appveyor:
-    windows:
-      commands:
-        - python ci/appveyor/patch_vs2008.py
-        - python ci/appveyor/install_visual_studio_wrapper.py
-      environment:
-        - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
+    commands:
+      - python ci/appveyor/patch_vs2008.py
+      - python ci/appveyor/install_visual_studio_wrapper.py
+    environment:
+      - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
 
   travis:
     osx:
@@ -19,47 +18,36 @@ pre_install:
 
 install:
 
-  any_ci:
-    any_os:
-      commands:
-        - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
-        - $<RUN_ENV> python -m pip install -r requirements.txt
-        - $<RUN_ENV> python -m pip install -r requirements-dev.txt
-        - python ci/install_cmake.py 3.6.2
+  commands:
+    - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
+    - $<RUN_ENV> python -m pip install -r requirements.txt
+    - $<RUN_ENV> python -m pip install -r requirements-dev.txt
+    - python ci/install_cmake.py 3.6.2
 
   circle:
-    linux:
-      commands:
-        - sudo apt-get update
-        - sudo apt-get install fortran
+    commands:
+      - sudo apt-get update
+      - sudo apt-get install fortran
 
 pre_build:
-  any_ci:
-    any_os:
-      commands:
-        - $<RUN_ENV> python -m flake8 -v
+  commands:
+    - $<RUN_ENV> python -m flake8 -v
 
 build:
-  any_ci:
-      any_os:
-        commands:
-          - $<RUN_ENV> python setup.py build
+  commands:
+    - $<RUN_ENV> python setup.py build
 
 test:
-  any_ci:
-    any_os:
-      commands:
-        - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
+  commands:
+    - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
 
 after_test:
-  any_ci:
-    any_os:
-      commands:
-        - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
-        - $<RUN_ENV> python setup.py bdist_wheel
+
+  commands:
+    - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
+    - $<RUN_ENV> python setup.py bdist_wheel
 
   appveyor:
-    windows:
-      commands:
-        - $<RUN_ENV> python setup.py bdist_wininst
-        - $<RUN_ENV> python setup.py bdist_msi
+    commands:
+      - $<RUN_ENV> python setup.py bdist_wininst
+      - $<RUN_ENV> python setup.py bdist_msi
