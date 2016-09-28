@@ -6,7 +6,7 @@ mapping:
     required: true
     unique: yes
 
-  pre_install: &step
+  before_install: &step
     type: map
     mapping:
 
@@ -33,7 +33,7 @@ mapping:
           osx: *context
 
   install: *step
-  pre_build: *step
+  before_build: *step
   build: *step
   test: *step
   after_test: *step
