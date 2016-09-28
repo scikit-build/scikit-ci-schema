@@ -2,6 +2,9 @@ schema_version: "0.4.0"
 
 pre_install:
 
+  environment:
+    - RUN_ENV: ""
+
   appveyor:
     environment:
       - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
