@@ -39,60 +39,72 @@ Example
 
 ::
 
-  schema_version: "0.4.0"
+  schema_version: "0.5.0"
 
-  pre_install:
+  before_install:
+
+    environment:
+      PYTHON: python
+      RUN_ENV: ""
 
     appveyor:
-      commands:
-        - python ci/appveyor/patch_vs2008.py
-        - python ci/appveyor/install_visual_studio_wrapper.py
       environment:
-        - RUN_ENV: ci/appveyor/run-with-visual-studio.cmd
+        PYTEST_ADDOPTS: "-m \"not fortran\""
+        PYTHON: $<PYTHON_DIR>\\python.exe
+        RUN_ENV: .\\..\\ci\\appveyor\\run-with-visual-studio.cmd
+      commands:
+        - python ../ci/appveyor/patch_vs2008.py
+        - python ../ci/appveyor/install_visual_studio_wrapper.py
+        - python ../ci/appveyor/tweak_environment.py
 
     travis:
       osx:
-        commands:
-          - python ci/travis/install_pyenv.py
         environment:
-          - RUN_ENV: ci/travis/run_with_pyenv.py"
+          PYTEST_ADDOPTS: "-m \"not fortran\""
+          RUN_ENV: ../ci/travis/run-with-pyenv.sh
+        commands:
+          - python ../ci/travis/install_pyenv.py
 
   install:
 
     commands:
-      - $<RUN_ENV> python -m pip install --disable-pip-version-check --upgrade pip
-      - $<RUN_ENV> python -m pip install -r requirements.txt
-      - $<RUN_ENV> python -m pip install -r requirements-dev.txt
-      - python ci/install_cmake.py 3.6.2
+      - python ../ci/install_cmake.py 3.6.2
+      - $<RUN_ENV> $<PYTHON> -m pip install --disable-pip-version-check --upgrade pip
+      - $<RUN_ENV> $<PYTHON> -m pip install -r requirements.txt
+      - $<RUN_ENV> $<PYTHON> -m pip install -r requirements-dev.txt
 
     circle:
       commands:
         - sudo apt-get update
-        - sudo apt-get install fortran
+        - sudo apt-get install gfortran
 
-  pre_build:
+  before_build:
     commands:
-      - $<RUN_ENV> python -m flake8 -v
+      - $<RUN_ENV> $<PYTHON> -m flake8 -v
 
   build:
     commands:
-      - $<RUN_ENV> python setup.py build
+      - $<RUN_ENV> $<PYTHON> setup.py build
 
   test:
+
+    appveyor:
+      environment:
+        PATH: $<PYTHON_DIR>\\Scripts;$<PATH>
+
     commands:
-      - $<RUN_ENV> python setup.py test --addopts $<EXTRA_TEST_ARGS>
+      - $<RUN_ENV> $<PYTHON> setup.py test
 
   after_test:
 
     commands:
       - $<RUN_ENV> codecov -X gcov --required --file ./tests/coverage.xml
-      - $<RUN_ENV> python setup.py bdist_wheel
+      - $<RUN_ENV> $<PYTHON> setup.py bdist_wheel
 
     appveyor:
       commands:
-        - $<RUN_ENV> python setup.py bdist_wininst
-        - $<RUN_ENV> python setup.py bdist_msi
-
+        - $<RUN_ENV> $<PYTHON> setup.py bdist_wininst
+        - $<RUN_ENV> $<PYTHON> setup.py bdist_msi
 
 
 License
