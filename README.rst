@@ -20,7 +20,7 @@ The `kwalify <http://www.kuwata-lab.com/kwalify/>`_ validator should be used.
 
 
 To facilitate the installation of the kwalify tool implemented in ruby, the docker
-image `jcfr/dock-kwalify https://microbadger.com/images/jcfr/dock-kwalify`_
+image `jcfr/dock-kwalify <https://microbadger.com/images/jcfr/dock-kwalify>`_
 can be used: ::
 
   curl https://raw.githubusercontent.com/jcfr/dock-kwalify/master/kwalify.sh \
